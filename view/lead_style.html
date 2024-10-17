@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/light.min.css">
+  <style>
+    ul {
+      padding-left:0;
+    }
+
+    li {
+      list-style:none;
+    }
+    label {
+      width: 330px;
+      margin: 5px 0;
+    }
+    .flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 25px;
+    }
+    .question {
+     margin: 15px 0; 
+    }
+    .error {
+      color: red;
+      font-size: 18px;
+    }
+    .result-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .result {
+      font-size: 40px;
+    }
+    .large-button {
+      font-size: 24px;
+    }
+  </style>
+  <title>リードスタイル診断</title>
+</head>
+<body>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <div id="app">
+    <h1>リードスタイル診断</h1>
+    <div v-if="!isDiagnosed">
+      <div v-for="question in questions" class="question">
+        <h2>{{question.classification}}</h2>
+        <div class="flex">
+          <label>
+            <input type="radio" :name="question.name" value="A" v-model="question.answer">
+            {{question.A}}
+          </label>
+          <label>
+            <input type="radio" :name="question.name" value="B" v-model="question.answer">
+            {{question.B}}
+          </label>
+        </div>
+        <div class="flex">
+          <label>
+            <input type="radio" :name="question.name" value="C" v-model="question.answer">
+            {{question.C}}
+          </label>
+          <label>
+            <input type="radio" :name="question.name" value="D" v-model="question.answer">
+            {{question.D}}
+          </label>
+        </div>
+      </div>
+      <div class="error">{{errorMessage}}</div>
+      <button class="large-button" @click="diagnose">診断する</button>
+    </div>
+    <div class="result-wrap" v-if="isDiagnosed">
+      <p>あなたのリードスタイルは・・・</p>
+      <p class="result">{{result}}</p>
+      <p>です！</p>
+    </div>
+  </div>
+  <script>
+  const { createApp, ref, onMounted } = Vue
+
+  createApp({
+    setup() {
+      const questions = ref([
+        {
+          name: "purpose",
+          classification: "目的",
+          A: "何のためにやるのかを重視する",
+          B: "どんな成果を残すかを重視する",
+          C: "どうやってやるかを重視する",
+          D: "いかに早く成果を出すか",
+          answer: ""
+        },
+        {
+          name: "planning",
+          classification: "計画性",
+          A: "計画を立てて実行する",
+          B: "実行しながら計画を立てる",
+          C: "観察しながら実行する",
+          D: "計画より目標を優先して実行",
+          answer: ""
+        },
+        {
+          name: "goodAt",
+          classification: "得意なこと",
+          A: "情報の共有",
+          B: "アイデアの拡散",
+          C: "アイデアの収束",
+          D: "意思決定をする",
+          answer: ""
+        },
+        {
+          name: "proceed",
+          classification: "物事の進め方",
+          A: "丁寧に進めたい",
+          B: "効率よく進めたい",
+          C: "工夫して進めたい",
+          D: "できるだけ早く進めたい",
+          answer: ""
+        },
+        {
+          name: "started",
+          classification: "物事の始め方",
+          A: "人間関係に気を配る",
+          B: "資源の配分と効果に気を配る",
+          C: "個人と組織の成長に気を配る",
+          D: "生産性と創造性に気を配る",
+          answer: ""
+        },
+        {
+          name: "sensitivity",
+          classification: "感性",
+          A: "感受性が豊かで、関係の質の変化に敏感",
+          B: "創造性が豊かで、環境の変化に敏感",
+          C: "独自性が豊かで、状況の変化に敏感",
+          D: "論理性が豊かで、損得の変化に敏感",
+          answer: ""
+        },
+        {
+          name: "framework",
+          classification: "フレームワーク",
+          A: "既存のものの見方を持たない",
+          B: "既存のものの見方を活用する",
+          C: "既存のものの見方を疑う",
+          D: "新しいものの見方を生み出す",
+          answer: ""
+        },
+        {
+          name: "relationship",
+          classification: "他者との関係",
+          A: "人は変えられないと思っている",
+          B: "条件を整えれば、人は変わると思っている",
+          C: "人は変えられると思っている",
+          D: "人は変わると思っている",
+          answer: ""
+        },
+        {
+          name: "principle",
+          classification: "主義",
+          A: "快楽主義（楽しいことが大事）",
+          B: "成果主義（成果を残すことが大事）",
+          C: "現実主義（今できる事をするのが大事）",
+          D: "理想主義（ありたい姿を実現することが大事）",
+          answer: ""
+        },
+        {
+          name: "like",
+          classification: "好きなこと",
+          A: "人の話を聞くのが好き",
+          B: "まず行動に移すことが好き",
+          C: "人に教えることが好き",
+          D: "じっくり深く考えることが好き",
+          answer: ""
+        },
+      ])
+      const errorMessage = ref("")
+      const result = ref("")
+      const isDiagnosed = ref(false)
+
+
+      onMounted(async () => {
+        const res = await fetch("/api/init")
+        const json = await res.json()
+        if (json.result) {
+          isDiagnosed.value = true
+          result.value = json.result
+        }
+      })
+
+
+      const diagnose = async () => {
+        // 未回答チェック
+        if (questions.value.some(q => q.answer == "")) {
+          errorMessage.value = "未回答の項目があります"
+          return
+        }
+
+        const answer = questions.value.map(q => q.answer).reduce((obj, key) => {
+          obj[key] = (obj[key] || 0) + 1
+          return obj
+        }, {});
+
+        console.log(JSON.stringify({answer}))
+        const res = await fetch('/api/diagnose', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({answer})
+        })
+
+        result.value = (await res.json()).result
+
+        isDiagnosed.value = true
+      }
+      return {
+        questions,
+        errorMessage,
+        result,
+        isDiagnosed,
+        diagnose
+      }
+    }
+  }).mount('#app')
+
+  </script>
+</body>
+</html>

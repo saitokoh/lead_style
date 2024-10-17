@@ -1,0 +1,42 @@
+version: '3'
+services:
+  db:
+    image: postgres:17
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USER:-saitokoh}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-saitokoh}
+      POSTGRES_DB: ${DB_NAME:-saitokoh_dev}
+    ports:
+      - "5432:5432"
+
+  node:
+    build:
+      context: .
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+    ports:
+      - '3000:3000'
+    environment:
+      TZ: Asia/Tokyo
+      DB_HOST: ${DB_HOST:-db}
+      DB_USER: ${DB_USER:-saitokoh}
+      DB_PASSWORD: ${DB_PASSWORD:-saitokoh}
+      DB_NAME: ${DB_NAME:-saitokoh_dev}
+    tty: true
+    privileged : true
+    stdin_open: true
+    depends_on:
+      - db
+    volumes:
+      - ./:/home/saitokoh/app
+      - node_modules-data:/home/saitokoh/app/node_modules
+      - ./node_modules:/home/saitokoh/node_modules
+      - ./init:/home/saitokoh/init
+    command: sh /home/saitokoh/init/node_modules_sync.sh
+
+volumes:
+  node_modules-data:
+  postgres_data:
