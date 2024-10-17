@@ -3,7 +3,7 @@ services:
     name: lead-style-app
     env: node
     buildCommand: npm install && npx prisma generate
-    startCommand: npm start
+    startCommand: npx prisma migrate deploy && npm start
     envVars:
       - key: NODE_ENV
         value: production
