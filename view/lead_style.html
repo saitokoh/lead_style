@@ -75,8 +75,11 @@
     </div>
     <div class="result-wrap" v-if="isDiagnosed">
       <p>あなたのリードスタイルは・・・</p>
-      <p class="result">{{result}}</p>
+      <p class="result">{{leadStyle.result}}</p>
       <p>です！</p>
+      <p>
+        ＜メモ＞A: {{leadStyle.a}}, B: {{leadStyle.b}}, C: {{leadStyle.c}}, D: {{leadStyle.d}}
+      </p>
     </div>
   </div>
   <script>
@@ -177,7 +180,7 @@
         },
       ])
       const errorMessage = ref("")
-      const result = ref("")
+      const leadStyle = ref({})
       const isDiagnosed = ref(false)
 
 
@@ -186,7 +189,7 @@
         const json = await res.json()
         if (json.result) {
           isDiagnosed.value = true
-          result.value = json.result
+          leadStyle.value = json
         }
       })
 
@@ -203,7 +206,6 @@
           return obj
         }, {});
 
-        console.log(JSON.stringify({answer}))
         const res = await fetch('/api/diagnose', {
           method: 'POST',
           headers: {
@@ -212,14 +214,14 @@
           body: JSON.stringify({answer})
         })
 
-        result.value = (await res.json()).result
+        leadStyle.value = (await res.json())
 
         isDiagnosed.value = true
       }
       return {
         questions,
         errorMessage,
-        result,
+        leadStyle,
         isDiagnosed,
         diagnose
       }

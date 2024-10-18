@@ -25,14 +25,18 @@ app.get('/api/init', async (req, res) => {
   const sessionID = req.sessionID
 
   const leadStyle = await prisma.leadStyles.findFirst({
+    select: {
+      a: true,
+      b: true,
+      c: true,
+      d: true,
+      result: true,
+    },
     where: {
       sessionId: sessionID
     }
   })
-
-  res.json({
-    result: leadStyle?.result,
-  })
+  res.json(leadStyle)
 
 })
 
@@ -73,7 +77,11 @@ app.post('/api/diagnose', async (req, res) => {
   })
 
   res.json({
-    result,
+    a: answer.A || 0,
+    b: answer.B || 0,
+    c: answer.C || 0,
+    d: answer.D || 0,
+    result: result,
   })
 })
 
