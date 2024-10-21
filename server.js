@@ -21,6 +21,10 @@ app.get('/lead-style', async (req, res) => {
   res.sendFile(__dirname + '/view/lead_style.html')
 })
 
+app.get('/bubble-chart', async (req, res) => {
+  res.sendFile(__dirname + '/view/bubble_chart.html')
+})
+
 app.get('/api/init', async (req, res) => {
   const sessionID = req.sessionID
 
@@ -75,6 +79,26 @@ app.post('/api/diagnose', async (req, res) => {
   })
 
   res.json(result)
+})
+
+app.get('/api/result/all/bubble', async (req, res) => {
+  const tick = 5
+  const leadStyles = await prisma.leadStyles.findMany({
+    where: {
+      x: {not: null},
+      y: {not: null},
+    }
+  })
+  const datas = leadStyles.reduce((arr, ls) => {
+    if (arr.some(value => value.x == ls.x && value.y == ls.y)) {
+      const v = arr.find(value => value.x == ls.x && value.y == ls.y)
+      v.r += tick
+    } else {
+      arr.push({x: ls.x, y: ls.y, r: tick})
+    }
+    return arr
+  },[])
+  res.json({datas})
 })
 
 app.listen(port, () => {

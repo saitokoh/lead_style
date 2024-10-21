@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/light.min.css">  
+  <style>
+    .result-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  </style>
+  <title>リードスタイル診断まとめ</title>
+</head>
+<body>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+  
+  <div id="app">
+    <h1>診断まとめ</h1>
+    <div class="result-wrap">
+      <div>
+        <canvas ref="chartCanvas" width="600" height="600"></canvas>
+      </div>
+    </div>
+  </div>
+  <script>
+  const { createApp, ref, onMounted, nextTick } = Vue
+
+  createApp({
+    setup() {
+      const chartCanvas = ref(null);
+
+      onMounted(async () => {
+        const res = await fetch("/api/result/all/bubble")
+        const json = await res.json()
+        createChart(json.datas)
+      })
+
+      const createChart = (datas) => {
+        nextTick(() => {
+          const ctx = chartCanvas.value.getContext('2d');
+          new Chart(ctx, {
+            type: 'bubble',
+            data: {
+              datasets: [{
+                data: datas,
+                backgroundColor: 'rgb(255, 99, 132)',
+              }]
+            },
+            options: {
+              scales: {
+                x: {
+                  min: -12,
+                  max: 12,
+                  grid: {
+                    drawBorder: false,
+                    color: (context) => context.tick.value === 0 ? 'rgba(0,0,0,1)' : 'rgba(0,0,0,0)',
+                  },
+                  ticks: {
+                    display: false
+                  }
+                },
+                y: {
+                  min: -12,
+                  max: 12,
+                  grid: {
+                    drawBorder: false,
+                    color: (context) => context.tick.value === 0 ? 'rgba(0,0,0,1)' : 'rgba(0,0,0,0)',
+                  },
+                  ticks: {
+                    display: false
+                  }
+                }
+              },
+              plugins: {
+                legend: {
+                  display: false
+                },
+                annotation: {
+                  annotations: {
+                    facilitator: {
+                      type: 'box',
+                      xMin: -12,
+                      xMax: 0,
+                      yMin: 0,
+                      yMax: 12,
+                      backgroundColor: 'rgba(255, 99, 132, 0.25)',
+                      label: {
+                        content: 'ファシリテーター型',
+                        display: true,
+                        font: {
+                          size: 16
+                        },
+                        color: 'rgba(0, 0, 0, 0.5)'
+                      }
+                    },
+                    maestro: {
+                      type: 'box',
+                      xMin: 0,
+                      xMax: 12,
+                      yMin: 0,
+                      yMax: 12,
+                      backgroundColor: 'rgba(54, 162, 235, 0.25)',
+                      label: {
+                        content: 'マエストロ型',
+                        display: true,
+                        font: {
+                          size: 16
+                        },
+                        color: 'rgba(0, 0, 0, 0.5)'
+                      }
+                    },
+                    teacher: {
+                      type: 'box',
+                      xMin: -12,
+                      xMax: 0,
+                      yMin: -12,
+                      yMax: 0,
+                      backgroundColor: 'rgba(255, 206, 86, 0.25)',
+                      label: {
+                        content: 'ティーチャー型',
+                        display: true,
+                        font: {
+                          size: 16
+                        },
+                        color: 'rgba(0, 0, 0, 0.5)'
+                      }
+                    },
+                    consultant: {
+                      type: 'box',
+                      xMin: 0,
+                      xMax: 12,
+                      yMin: -12,
+                      yMax: 0,
+                      backgroundColor: 'rgba(75, 192, 192, 0.25)',
+                      label: {
+                        content: 'コンサルタント型',
+                        display: true,
+                        font: {
+                          size: 16
+                        },
+                        color: 'rgba(0, 0, 0, 0.5)'
+                      }
+                    },
+                    xAxisLeftLabel: {
+                      type: 'label',
+                      xValue: -12,
+                      yValue: 0,
+                      content: 'プロセス志向',
+                      font: { size: 16 },
+                      color: 'black',
+                      xAdjust: 15,
+                      backgroundColor: 'white',
+                      borderRadius: 4,
+                      padding: 4,
+                      rotation: -90,
+                    },
+                    xAxisRightLabel: {
+                      type: 'label',
+                      xValue: 12,
+                      yValue: 0,
+                      content: '成果志向',
+                      font: { size: 16 },
+                      color: 'black',
+                      xAdjust: -15,
+                      backgroundColor: 'white',
+                      borderRadius: 4,
+                      padding: 4,
+                      rotation: 90,
+                    },
+                    yAxisTopLabel: {
+                      type: 'label',
+                      xValue: 0,
+                      yValue: 12,
+                      content: '押す',
+                      font: { size: 16 },
+                      color: 'black',
+                      yAdjust: 15,
+                      backgroundColor: 'white',
+                      borderRadius: 4,
+                      padding: 4
+                    },
+                    yAxisBottomLabel: {
+                      type: 'label',
+                      xValue: 0,
+                      yValue: -12,
+                      content: '引っ張る',
+                      font: { size: 16 },
+                      color: 'black',
+                      yAdjust: -15,
+                      backgroundColor: 'white',
+                      borderRadius: 4,
+                      padding: 4
+                    }
+                  }
+                }
+              }
+            }
+          });
+        })        
+      }
+
+      return {
+        chartCanvas,
+      }
+    }
+  }).mount('#app')
+
+  </script>
+</body>
+</html>
