@@ -81,7 +81,7 @@
       <p class="result">{{leadStyle.result}}</p>
       <p>です！</p>
       <div>
-        <canvas ref="chartCanvas" width="500" height="500"></canvas>
+        <canvas ref="chartCanvas"></canvas>
       </div>
     </div>
   </div>
@@ -194,9 +194,23 @@
         if (json?.result) {
           isDiagnosed.value = true
           leadStyle.value = json
+          setCanvasSize(); // Canvasのサイズを設定
           createChart()
         }
       })
+
+      // デバイスによってCanvasのサイズを設定する関数
+      const setCanvasSize = () => {
+        nextTick(() => {
+          if (window.innerWidth <= 600) {
+            chartCanvas.value.width = 350; // スマホ用の幅
+            chartCanvas.value.height = 350; // スマホ用の高さ
+          } else {
+            chartCanvas.value.width = 600; // PC用の幅
+            chartCanvas.value.height = 600; // PC用の高さ
+          }
+        })
+      };
 
 
       const diagnose = async () => {
@@ -222,7 +236,7 @@
         leadStyle.value = (await res.json())
 
         isDiagnosed.value = true
-
+        setCanvasSize()
         createChart()
       }
 
