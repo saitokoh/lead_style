@@ -21,4 +21,6 @@ model LeadStyles {
   d Int
   result String
   sessionId String @unique
+  x Int?
+  y Int?
 }

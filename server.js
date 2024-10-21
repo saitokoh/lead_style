@@ -31,6 +31,8 @@ app.get('/api/init', async (req, res) => {
       c: true,
       d: true,
       result: true,
+      x: true,
+      y: true
     },
     where: {
       sessionId: sessionID
@@ -54,38 +56,77 @@ app.post('/api/diagnose', async (req, res) => {
     return res.status(409).send('診断済み');
   }
 
-  const styles = {
-    A: "ファシリテーター型",
-    B: "マエストロ型",
-    C: "ティーチャー型",
-    D: "コンサルタント型",
-  }
-  const max = Math.max(...Object.values(answer))
-  const targetStyles = Object.keys(answer).filter(key => answer[key] == max).map(key => styles[key])
-  
-  const result = targetStyles.join(" × ")
-
-  await prisma.leadStyles.create({
-    data: {
-      a: answer.A || 0,
-      b: answer.B || 0,
-      c: answer.C || 0,
-      d: answer.D || 0,
-      result: result,
-      sessionId: sessionID
-    }
-  })
-
-  res.json({
+  const coordinate = objToCoordinate(answer)
+  const result = {
     a: answer.A || 0,
     b: answer.B || 0,
     c: answer.C || 0,
     d: answer.D || 0,
-    result: result,
-  })
-})
+    result: coordinate.result,
+    x: coordinate.x,
+    y: coordinate.y
+  }
 
+  await prisma.leadStyles.create({
+    data: {
+      ...result,
+      sessionId: sessionID,
+      }
+  })
+
+  res.json(result)
+})
 
 app.listen(port, () => {
   console.log(`example app listening on port ${port}`)
 })
+
+const objToCoordinate = obj => {
+  let x = 0
+  let y = 0
+
+  // A
+  x -= obj.A || 0
+  y += obj.A || 0
+
+  // B
+  x += obj.B || 0
+  y += obj.B || 0
+
+  // C
+  x -= obj.C || 0
+  y -= obj.C || 0
+
+  // D
+  x += obj.D || 0
+  y -= obj.D || 0
+
+
+  result = [] 
+  if (y > 0) {
+    if (x <= 0) {
+      result.push("ファシリテーター型")
+    }
+    if (x >= 0) {
+      result.push("マエストロ型")
+    }
+  } else if (y < 0) {
+    if (x <= 0) {
+      result.push("ティーチャー型")
+    }
+    if (x >= 0) {
+      result.push("コンサルタント型")
+    }
+  } else {
+    if (x < 0) {
+      result.push("ファシリテーター型")
+      result.push("ティーチャー型")
+    }
+    if (x > 0) {
+      result.push("マエストロ型")
+      result.push("コンサルタント型")
+    }
+  }
+
+  return {x, y, result: result.join(" × ")}
+}
