@@ -145,10 +145,11 @@ const objToCoordinate = obj => {
     if (x < 0) {
       result.push("ファシリテーター型")
       result.push("ティーチャー型")
-    }
-    if (x > 0) {
+    } else if (x > 0) {
       result.push("マエストロ型")
       result.push("コンサルタント型")
+    } else {
+      result.push("バランス型")
     }
   }
 
